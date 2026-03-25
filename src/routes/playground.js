@@ -30,19 +30,27 @@ function getOKXHeaders(method, path) {
 // Verify a specific tx hash on X Layer
 async function verifyTxHash(txHash) {
   try {
-    const path = `/api/v5/explorer/transaction/transaction-fills?chainShortName=XLAYER&txHash=${txHash}`
-    const response = await axios.get(
-      `https://www.oklink.com${path}`,
-      { headers: getOKXHeaders('GET', path) }
-    )
+    const oklinkKey = config.okx.apiKey
+    const url = `https://www.oklink.com/api/v5/explorer/transaction/transaction-fills?chainShortName=XLAYER&txHash=${txHash}`
+    
+    const response = await axios.get(url, {
+      headers: { 'Ok-Access-Key': oklinkKey }
+    })
+
     const txData = response.data?.data?.[0]
-    if (!txData) return false
+    if (!txData) {
+      console.warn(`[Verification] No data found for TX: ${txHash}`)
+      return false
+    }
 
     // Check the tx went to our receiving wallet
     const toAddr = txData.to?.toLowerCase()
-    return toAddr === config.wallet.address.toLowerCase()
+    const isToUs = toAddr === config.wallet.address.toLowerCase()
+    
+    console.log(`[Verification] TX: ${txHash.slice(0, 10)}... | SentTo: ${toAddr} | Match: ${isToUs}`)
+    return isToUs
   } catch (error) {
-    console.error('Playground tx verification error:', error.message)
+    console.error('Playground tx verification error:', error.response?.status || error.message)
     // For hackathon demo — accept the tx if we can't verify
     return true
   }
