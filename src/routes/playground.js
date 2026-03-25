@@ -1,6 +1,6 @@
 const express = require('express')
 const router = express.Router()
-const { callModel, getPrice } = require('../services/nvidia')
+const { callModel, callModelStream, getPrice } = require('../services/nvidia')
 const { logQuery } = require('../db/postgres')
 const config = require('../config/env')
 const axios = require('axios')
@@ -13,7 +13,7 @@ function getOKXHeaders(method, path) {
   const timestamp = new Date().toISOString()
   const message = timestamp + method + path
   const sign = crypto
-    .createHmac('sha256', config.okx.secretKey)
+    .createHmac('sha256', config.okx.secretKey || '')
     .update(message)
     .digest('base64')
 
@@ -22,6 +22,7 @@ function getOKXHeaders(method, path) {
     'OK-ACCESS-SIGN': sign,
     'OK-ACCESS-TIMESTAMP': timestamp,
     'OK-ACCESS-PASSPHRASE': config.okx.passphrase,
+    'Ok-Access-Key': config.okx.apiKey, // Alternative casing for Explorer API
     'Content-Type': 'application/json'
   }
 }
