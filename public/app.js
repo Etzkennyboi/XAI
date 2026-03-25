@@ -320,25 +320,63 @@ async function sendPlaygroundQuery() {
       })
     });
 
-    const result = await res.json();
+    if (!res.ok) {
+      const errData = await res.json();
+      throw new Error(errData.message || 'Model query failed');
+    }
 
     const assistantMsg = document.createElement('div');
     assistantMsg.className = 'chat-msg msg-assistant';
-    
-    if (result.choices?.[0]) {
-      const markdownContent = result.choices[0].message?.content || '';
-      // Use marked to render the markdown nicely
-      assistantMsg.innerHTML = `<div class="markdown-body">${marked.parse(markdownContent)}</div>`;
-    } else {
-      assistantMsg.innerHTML = `<div style="color:#ef4444;">${result.error || 'Server error'}</div>`;
-    }
-    
+    const contentDiv = document.createElement('div');
+    contentDiv.className = 'markdown-body';
+    assistantMsg.appendChild(contentDiv);
     messagesEl.appendChild(assistantMsg);
-    messagesEl.scrollTop = messagesEl.scrollHeight;
+    
+    // Handle Stream
+    const reader = res.body.getReader();
+    const decoder = new TextDecoder();
+    let fullText = '';
+    let reasoningText = '';
 
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+
+      const chunk = decoder.decode(value, { stream: true });
+      const lines = chunk.split('\n');
+
+      for (const line of lines) {
+        if (!line.trim() || line.includes('[DONE]')) continue;
+        if (line.startsWith('data: ')) {
+          try {
+            const data = JSON.parse(line.replace('data: ', ''));
+            const delta = data.choices?.[0]?.delta?.content || '';
+            const reasoning = data.choices?.[0]?.delta?.reasoning_content || '';
+            
+            if (reasoning) {
+              reasoningText += reasoning;
+            }
+            if (delta) {
+              fullText += delta;
+            }
+
+            // Update UI with reasoning (italic) + content
+            let displayHtml = '';
+            if (reasoningText) {
+              displayHtml += `<div style="color:var(--text-muted); font-style:italic; font-size:0.85rem; margin-bottom:10px; padding-bottom:10px; border-bottom:1px dashed var(--border-glass);">Reasoning:<br>${reasoningText}</div>`;
+            }
+            displayHtml += marked.parse(fullText);
+            contentDiv.innerHTML = displayHtml;
+            messagesEl.scrollTop = messagesEl.scrollHeight;
+          } catch (e) {
+            console.warn('Error parsing stream chunk', e);
+          }
+        }
+      }
+    }
   } catch (err) {
     console.error('Playground Query Error:', err);
-    alert('Request failed. Check console for details.');
+    alert('Request failed: ' + err.message);
   } finally {
     btn.disabled = false;
     btnText.textContent = 'Pay & Send';

@@ -94,8 +94,7 @@ async function callModel(modelId, messages, customMaxTokens) {
   }
 
   console.log(`[${new Date().toISOString()}] Calling NVIDIA NIM Model: ${model.nvidiaModel}...`)
-  console.log(`[Payload]:`, JSON.stringify({ ...payload, messages: '...' }))
-
+  
   try {
     const response = await axios.post(
       'https://integrate.api.nvidia.com/v1/chat/completions',
@@ -105,7 +104,7 @@ async function callModel(modelId, messages, customMaxTokens) {
           'Authorization': `Bearer ${model.apiKey}`,
           'Content-Type': 'application/json'
         },
-        timeout: 300000 // Increased to 300 seconds (5 minutes)
+        timeout: 300000
       }
     )
 
@@ -119,14 +118,40 @@ async function callModel(modelId, messages, customMaxTokens) {
     }
   } catch (err) {
     const errorBody = err.response?.data
-    const status = err.response?.status
-    console.error(`[${new Date().toISOString()}] Error calling ${modelId} (Status ${status}):`, errorBody || err.message)
-    
-    if (errorBody && errorBody.message) {
-      throw new Error(`NVIDIA Error: ${errorBody.message}`)
-    }
-    throw err
+    console.error(`Error calling ${modelId}:`, errorBody || err.message)
+    throw new Error(errorBody?.message || err.message)
   }
+}
+
+async function callModelStream(modelId, messages, customMaxTokens) {
+  const model = MODELS[modelId]
+  if (!model) throw new Error(`Model ${modelId} not found`)
+
+  const payload = {
+    model: model.nvidiaModel,
+    messages,
+    max_tokens: customMaxTokens || model.maxTokens,
+    temperature: model.temperature,
+    top_p: model.topP,
+    stream: true
+  }
+
+  if (model.thinking) {
+    payload.chat_template_kwargs = { thinking: true }
+  }
+
+  return axios.post(
+    'https://integrate.api.nvidia.com/v1/chat/completions',
+    payload,
+    {
+      headers: {
+        'Authorization': `Bearer ${model.apiKey}`,
+        'Content-Type': 'application/json'
+      },
+      responseType: 'stream',
+      timeout: 300000
+    }
+  )
 }
 
 function getModelInfo(modelId) {
@@ -149,4 +174,4 @@ function getPrice(modelId) {
   return MODELS[modelId]?.price || 0.01
 }
 
-module.exports = { callModel, getModelInfo, getAllModels, getPrice }
+module.exports = { callModel, callModelStream, getModelInfo, getAllModels, getPrice }

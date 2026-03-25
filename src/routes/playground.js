@@ -86,29 +86,55 @@ router.post('/', async (req, res) => {
       })
     }
 
-    const result = await callModel(modelId, messages, max_tokens)
+    const streamResponse = await callModelStream(modelId, messages, max_tokens)
+    
+    // Set headers for SSE (Server-Sent Events)
+    res.setHeader('Content-Type', 'text/event-stream')
+    res.setHeader('Cache-Control', 'no-cache')
+    res.setHeader('Connection', 'keep-alive')
 
-    // Log with payment_method = 'web' (Background/Non-blocking)
-    logQuery({
-      walletAddress,
-      model: modelId,
-      amountPaid: price,
-      tokensUsed: result.tokensUsed || 0,
-      responseTimeMs: result.responseTimeMs || 0,
-      status: 'success',
-      paymentMethod: 'web'
-    }).catch(err => console.error('Background logQuery failed:', err.message))
+    let fullContent = ''
 
-    console.log(`✅ Playground query completed for ${walletAddress}`)
+    streamResponse.data.on('data', chunk => {
+      const payload = chunk.toString()
+      res.write(payload) // Stream plain text or SSE chunks to frontend
 
-    return res.json(result.data)
+      // Try to extract content for background logging
+      try {
+        const lines = payload.split('\n').filter(line => line.trim() !== '')
+        for (const line of lines) {
+          if (line.includes('[DONE]')) continue
+          if (line.startsWith('data: ')) {
+            const data = JSON.parse(line.replace('data: ', ''))
+            const delta = data.choices?.[0]?.delta?.content || ''
+            fullContent += delta
+          }
+        }
+      } catch (e) {}
+    })
+
+    streamResponse.data.on('end', () => {
+      // Background log completion
+      logQuery({
+        walletAddress,
+        model: modelId,
+        amountPaid: price,
+        tokensUsed: 0, // Approx
+        responseTimeMs: 0,
+        status: 'success',
+        paymentMethod: 'web'
+      }).catch(err => console.error('Background logQuery failed:', err.message))
+
+      console.log(`✅ Playground query completed for ${walletAddress}`)
+      res.end()
+    })
 
   } catch (error) {
     console.error('Playground query failed:', error.message)
-    return res.status(500).json({
-      error: 'Model query failed',
-      message: error.message
-    })
+    if (!res.headersSent) {
+      return res.status(500).json({ error: 'Model query failed', message: error.message })
+    }
+    res.end()
   }
 })
 
