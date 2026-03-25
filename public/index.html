@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>XAI Market — The API Marketplace for AI Agents</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  
+  <div class="bg-mesh"></div>
+  <div class="bg-grid"></div>
+
+  <!-- NAVIGATION -->
+  <nav>
+    <div class="nav-container">
+      <a href="#" class="logo" onclick="navigateTo('home')">
+        <div class="logo-icon">X</div>
+        <span>XAI Market</span>
+      </a>
+      
+      <div class="nav-links">
+        <button class="nav-item active" data-page="home" onclick="navigateTo('home')">Models</button>
+        <button class="nav-item" data-page="playground" onclick="navigateTo('playground')">Playground</button>
+        <button class="nav-item" data-page="docs" onclick="navigateTo('docs')">API Docs</button>
+        <button class="nav-item" data-page="usage" onclick="navigateTo('usage')">Usage</button>
+      </div>
+
+      <div class="wallet-section">
+        <button id="wallet-connect-btn" class="wallet-badge" onclick="connectWallet()">
+          <div style="width:8px; height:8px; border-radius:50%; background:var(--text-muted);"></div>
+          <span>Connect Wallet</span>
+        </button>
+        <div id="wallet-connected" class="wallet-badge" style="display:none; border-color:var(--accent-emerald);">
+          <div style="width:8px; height:8px; border-radius:50%; background:var(--accent-emerald);"></div>
+          <span id="wallet-address-display" style="font-family:'JetBrains Mono',monospace; font-size:0.85rem;">0x00...000</span>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <!-- HOME / MODELS SECTION -->
+  <section id="page-home" class="section active">
+    
+    <div class="hero">
+      <div class="hero-tag">X Layer Onchain OS — AI Marketplace</div>
+      <h1>The API Marketplace<br>Where <span style="background:var(--gradient-main); -webkit-background-clip:text; -webkit-text-fill-color:transparent;">Agents Pay Agents</span></h1>
+      <p>Access 6 premium AI models with autonomous USDC micropayments on X Layer. Every query is a payment. Zero human involvement required.</p>
+      
+      <div class="hero-btns">
+        <button class="btn-main btn-primary" onclick="navigateTo('playground')">Start Playing</button>
+        <button class="btn-main btn-secondary" onclick="navigateTo('docs')">Read API Spec</button>
+      </div>
+
+      <div class="stats-container">
+        <div class="stat-card">
+          <div id="stat-queries" class="stat-val">0</div>
+          <div class="stat-label">Total Queries</div>
+        </div>
+        <div class="stat-card">
+          <div id="stat-revenue" class="stat-val">$0.00</div>
+          <div class="stat-label">Total Revenue</div>
+        </div>
+        <div class="stat-card">
+          <div id="stat-wallets" class="stat-val">0</div>
+          <div class="stat-label">Active Agents</div>
+        </div>
+        <div class="stat-card">
+          <div id="stat-speed" class="stat-val">0ms</div>
+          <div class="stat-label">Avg Response</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="grid-header">
+      <h2 class="grid-title">Premium NIM Models</h2>
+      <p class="grid-sub">Select your model. $0.01 USDC per inference query.</p>
+    </div>
+
+    <div id="models-grid" class="model-grid">
+      <!-- Cards rendered via JS -->
+    </div>
+
+  </section>
+
+  <!-- PLAYGROUND SECTION -->
+  <section id="page-playground" class="section">
+    <div class="pg-layout">
+      
+      <div class="pg-sidebar">
+        
+        <div class="sidebar-card">
+          <label>Select AI Model</label>
+          <select id="pg-model" onchange="updateModelInfo()"></select>
+          
+          <div id="pg-model-info" style="margin-top: 16px;">
+            <!-- Rendered via JS -->
+          </div>
+        </div>
+
+        <div class="sidebar-card">
+          <label>System Instructions</label>
+          <textarea id="pg-system" placeholder="You are a helpful assistant..." style="height:100px; resize:none;">You are a premium AI agent on XAI Market.</textarea>
+        </div>
+
+        <div class="sidebar-card">
+          <label>Pricing Note</label>
+          <div style="font-size:0.85rem; color:var(--text-secondary);">
+            Every query sends a $0.01 USDC transaction directly to the marketplace receiving wallet on X Layer.
+          </div>
+        </div>
+
+      </div>
+
+      <div class="pg-main">
+        <div id="pg-messages" class="chat-messages">
+          <div class="msg-assistant">
+            Hello! I am ready to process your query on X Layer. Please connect your wallet to start.
+          </div>
+        </div>
+
+        <div class="chat-input-area">
+          <input type="text" id="pg-prompt" class="chat-input" placeholder="Type your message here..." onkeydown="if(event.key === 'Enter') sendPlaygroundQuery()">
+          <button id="pg-send-btn" class="btn-main btn-primary" onclick="sendPlaygroundQuery()" style="padding: 10px 24px; font-size: 0.9rem;">
+            <span>⚡</span> <span id="btn-text">Pay & Send</span>
+          </button>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- DOCS SECTION -->
+  <section id="page-docs" class="section">
+    <div style="max-width: 800px; margin: 0 auto;">
+      <h1 class="hero h1" style="font-size: 3rem; text-align: left; padding: 0; margin-bottom: 2rem;">API Documentation</h1>
+      <p style="color:var(--text-secondary); margin-bottom: 3rem;">XAI Market uses the <b>x402 Protocol</b> for payment routing. Your agent can query any model by sending a $0.01 USDC transaction on X Layer and including the TX hash in the headers.</p>
+
+      <div class="sidebar-card" style="margin-bottom: 24px;">
+        <label>Base URL</label>
+        <div style="font-family:'JetBrains Mono',monospace; color:var(--accent-blue);">http://localhost:3001/api</div>
+      </div>
+
+      <div class="sidebar-card">
+        <label>Example Request (Curl)</label>
+        <pre style="background:rgba(0,0,0,0.3); padding:20px; border-radius:12px; font-family:'JetBrains Mono',monospace; font-size:0.85rem; color:var(--text-primary); overflow-x:auto;">
+curl -X POST http://localhost:3001/api/chat \
+-H "x-payment: <your-tx-hash>" \
+-H "x-wallet-address: <your-address>" \
+-d '{
+  "model": "deepseek-ai/deepseek-v3.2",
+  "messages": [{"role": "user", "content": "Hi!"}]
+}'</pre>
+      </div>
+    </div>
+  </section>
+
+  <!-- USAGE SECTION -->
+  <section id="page-usage" class="section">
+    <div style="max-width: 1000px; margin: 0 auto;">
+      <h1 style="font-size: 2.5rem; margin-bottom: 2rem;">Agent Activity</h1>
+      
+      <div class="pg-sidebar" style="flex-direction: row; align-items: flex-end; margin-bottom: 40px;">
+        <div class="sidebar-card" style="flex:1;">
+          <label>Wallet Address</label>
+          <input type="text" id="usage-wallet-input" placeholder="0x..." onkeydown="if(event.key === 'Enter') loadUsage()">
+        </div>
+        <button class="btn-main btn-primary" onclick="loadUsage()" style="height:50px;">Check History</button>
+      </div>
+
+      <div class="sidebar-card">
+        <label>Recent Transactions</label>
+        <div style="overflow-x: auto;">
+          <table style="width:100%; border-collapse:collapse; margin-top:16px;">
+            <thead>
+              <tr style="text-align:left; border-bottom:1px solid var(--border-glass);">
+                <th style="padding:12px; font-size:0.75rem; color:var(--text-muted); text-transform:uppercase;">Time</th>
+                <th style="padding:12px; font-size:0.75rem; color:var(--text-muted); text-transform:uppercase;">Model</th>
+                <th style="padding:12px; font-size:0.75rem; color:var(--text-muted); text-transform:uppercase;">Price</th>
+                <th style="padding:12px; font-size:0.75rem; color:var(--text-muted); text-transform:uppercase;">Status</th>
+              </tr>
+            </thead>
+            <tbody id="usage-table-body">
+              <tr>
+                <td colspan="4" style="text-align:center; padding:40px; color:var(--text-muted);">Enter a wallet address to see query history.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <script src="app.js"></script>
+</body>
+</html>

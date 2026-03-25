@@ -1,0 +1,23 @@
+{
+  "name": "xai-market",
+  "version": "2.0.0",
+  "description": "The API marketplace where agents pay agents — x402 on X Layer",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/index.js",
+    "dev": "node src/index.js",
+    "wallet": "node createWallet.js"
+  },
+  "keywords": ["x402", "xlayer", "ai", "marketplace", "agents"],
+  "author": "XAI Market",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "axios": "^1.13.6",
+    "cors": "^2.8.6",
+    "dotenv": "^17.3.1",
+    "ethers": "^6.16.0",
+    "express": "^5.2.1",
+    "pg": "^8.20.0"
+  }
+}
