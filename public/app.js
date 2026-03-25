@@ -143,35 +143,58 @@ async function connectWallet() {
     const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
     connectedWallet = accounts[0];
 
-    // Switch/Add X Layer network
-    try {
-      await window.ethereum.request({
-        method: 'wallet_switchEthereumChain',
-        params: [{ chainId: XLAYER_CHAIN_ID }]
-      });
-    } catch (err) {
-      if (err.code === 4902) {
-        await window.ethereum.request({
-          method: 'wallet_addEthereumChain',
-          params: [{
-            chainId: XLAYER_CHAIN_ID,
-            chainName: 'X Layer Mainnet',
-            nativeCurrency: { name: 'OKB', symbol: 'OKB', decimals: 18 },
-            rpcUrls: ['https://rpc.xlayer.tech'],
-            blockExplorerUrls: ['https://www.oklink.com/xlayer']
-          }]
-        });
-      }
+    // Force switch to X Layer — mandatory
+    await switchToXLayer();
+
+    // Verify we are on X Layer
+    const chainId = await window.ethereum.request({ method: 'eth_chainId' });
+    if (chainId !== XLAYER_CHAIN_ID) {
+      alert('Please switch to X Layer Mainnet (Chain ID 196) in your wallet to continue.');
+      connectedWallet = null;
+      return;
     }
 
     // Get receiving info
-    const res = await fetch(`${API_BASE}/api/info`);
-    const data = await res.json();
-    receivingWallet = data.receivingWallet;
+    try {
+      const res = await fetch(`${API_BASE}/api/info`);
+      const data = await res.json();
+      receivingWallet = data.receivingWallet;
+    } catch (e) {
+      console.warn('Could not fetch /api/info, using fallback wallet');
+      receivingWallet = '0x07fFCc694F4afE3C4BAE71b54262cc4BA57b0120';
+    }
 
+    console.log('Connected:', connectedWallet, '| Chain:', chainId, '| PayTo:', receivingWallet);
     updateWalletUI();
   } catch (err) {
     console.error('Wallet Error:', err);
+    alert('Wallet connection failed: ' + (err.message || 'Unknown error'));
+  }
+}
+
+async function switchToXLayer() {
+  try {
+    await window.ethereum.request({
+      method: 'wallet_switchEthereumChain',
+      params: [{ chainId: XLAYER_CHAIN_ID }]
+    });
+  } catch (err) {
+    // 4902 = chain not added yet
+    if (err.code === 4902) {
+      await window.ethereum.request({
+        method: 'wallet_addEthereumChain',
+        params: [{
+          chainId: XLAYER_CHAIN_ID,
+          chainName: 'X Layer Mainnet',
+          nativeCurrency: { name: 'OKB', symbol: 'OKB', decimals: 18 },
+          rpcUrls: ['https://rpc.xlayer.tech'],
+          blockExplorerUrls: ['https://www.oklink.com/xlayer']
+        }]
+      });
+    } else {
+      // User rejected or other error — re-throw so connectWallet catches it
+      throw err;
+    }
   }
 }
 
@@ -207,9 +230,21 @@ async function sendPlaygroundQuery() {
 
   try {
     btn.disabled = true;
+    btnText.textContent = 'Switching to X Layer...';
+
+    // 0. Force X Layer before every transaction
+    await switchToXLayer();
+    const currentChain = await window.ethereum.request({ method: 'eth_chainId' });
+    if (currentChain !== XLAYER_CHAIN_ID) {
+      alert('You must be on X Layer Mainnet to send queries. Please switch networks.');
+      btn.disabled = false;
+      btnText.textContent = 'Pay & Send';
+      return;
+    }
+
     btnText.textContent = 'Awaiting Tx...';
 
-    // 1. Send USDC — use hardcoded fallback if /api/info didn't load
+    // 1. Check USDC balance first
     const payTo = receivingWallet || '0x07fFCc694F4afE3C4BAE71b54262cc4BA57b0120';
     if (!payTo || payTo === 'undefined') {
       alert('Could not determine the receiving wallet. Please reconnect your wallet.');
@@ -218,6 +253,29 @@ async function sendPlaygroundQuery() {
       return;
     }
 
+    // Call balanceOf(address) on USDC contract — selector 0x70a08231
+    const balanceOfData = '0x70a08231' + connectedWallet.toLowerCase().replace('0x', '').padStart(64, '0');
+    try {
+      const balanceHex = await window.ethereum.request({
+        method: 'eth_call',
+        params: [{ to: USDC_CONTRACT, data: balanceOfData }, 'latest']
+      });
+      const balance = parseInt(balanceHex, 16);
+      const needed = parseInt(QUERY_PRICE_WEI); // 10000 = $0.01 USDC (6 decimals)
+      console.log('USDC Balance:', balance, '| Needed:', needed);
+
+      if (balance < needed) {
+        alert(`Insufficient USDC balance!\n\nYou have: $${(balance / 1e6).toFixed(6)} USDC\nYou need: $${(needed / 1e6).toFixed(2)} USDC\n\nPlease fund your wallet with USDC on X Layer (Chain ID 196).`);
+        btn.disabled = false;
+        btnText.textContent = 'Pay & Send';
+        return;
+      }
+    } catch (balErr) {
+      console.warn('Could not check USDC balance:', balErr.message);
+      // Continue anyway — let MetaMask handle it
+    }
+
+    // 2. Send USDC transfer
     const toAddressEncoded = payTo.toLowerCase().replace('0x', '').padStart(64, '0');
     const amountEncoded = parseInt(QUERY_PRICE_WEI).toString(16).padStart(64, '0');
     const data = ERC20_TRANSFER_ABI + toAddressEncoded + amountEncoded;
