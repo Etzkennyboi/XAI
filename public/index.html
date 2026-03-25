@@ -19,11 +19,17 @@
         <span>XAI Market</span>
       </a>
       
-      <div class="nav-links">
-        <button class="nav-item active" data-page="home" onclick="navigateTo('home')">Models</button>
-        <button class="nav-item" data-page="playground" onclick="navigateTo('playground')">Playground</button>
-        <button class="nav-item" data-page="docs" onclick="navigateTo('docs')">API Docs</button>
-        <button class="nav-item" data-page="usage" onclick="navigateTo('usage')">Usage</button>
+      <button class="mobile-menu-toggle" id="menu-toggle" onclick="toggleMobileMenu()">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+
+      <div class="nav-links" id="nav-links">
+        <button class="nav-item active" data-page="home" onclick="navigateTo('home'); closeMobileMenu()">Models</button>
+        <button class="nav-item" data-page="playground" onclick="navigateTo('playground'); closeMobileMenu()">Playground</button>
+        <button class="nav-item" data-page="docs" onclick="navigateTo('docs'); closeMobileMenu()">API Docs</button>
+        <button class="nav-item" data-page="usage" onclick="navigateTo('usage'); closeMobileMenu()">Usage</button>
       </div>
 
       <div class="wallet-section">

@@ -71,6 +71,20 @@ function navigateTo(page) {
   window.scrollTo(0, 0);
 }
 
+function toggleMobileMenu() {
+  const navLinks = document.getElementById('nav-links');
+  const toggle = document.getElementById('menu-toggle');
+  navLinks.classList.toggle('active');
+  toggle.classList.toggle('active');
+}
+
+function closeMobileMenu() {
+  const navLinks = document.getElementById('nav-links');
+  const toggle = document.getElementById('menu-toggle');
+  navLinks.classList.remove('active');
+  toggle.classList.remove('active');
+}
+
 // ========== INITIAL RENDER ==========
 
 function renderModelCards() {
