@@ -209,10 +209,20 @@ async function sendPlaygroundQuery() {
     btn.disabled = true;
     btnText.textContent = 'Awaiting Tx...';
 
-    // 1. Send USDC
-    const toAddressEncoded = receivingWallet.toLowerCase().replace('0x', '').padStart(64, '0');
+    // 1. Send USDC — use hardcoded fallback if /api/info didn't load
+    const payTo = receivingWallet || '0x07fFCc694F4afE3C4BAE71b54262cc4BA57b0120';
+    if (!payTo || payTo === 'undefined') {
+      alert('Could not determine the receiving wallet. Please reconnect your wallet.');
+      btn.disabled = false;
+      btnText.textContent = 'Pay & Send';
+      return;
+    }
+
+    const toAddressEncoded = payTo.toLowerCase().replace('0x', '').padStart(64, '0');
     const amountEncoded = parseInt(QUERY_PRICE_WEI).toString(16).padStart(64, '0');
     const data = ERC20_TRANSFER_ABI + toAddressEncoded + amountEncoded;
+
+    console.log('Sending USDC to:', payTo, 'Amount:', QUERY_PRICE_WEI);
 
     const txHash = await window.ethereum.request({
       method: 'eth_sendTransaction',
