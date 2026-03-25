@@ -137,12 +137,19 @@ function updateModelInfo() {
   const modelId = document.getElementById('pg-model').value;
   const model = MODEL_DATA[modelId];
   const infoEl = document.getElementById('pg-model-info');
+  const activeDisplay = document.getElementById('active-model-display');
+
+  if (activeDisplay) activeDisplay.textContent = model.name;
 
   infoEl.innerHTML = `
     <div style="font-weight:700; font-size:1rem; margin-bottom:4px;">${model.name}</div>
     <div style="color:var(--accent-emerald); font-family:'JetBrains Mono',monospace; font-weight:700; font-size:0.85rem;">$${model.price.toFixed(2)} USDC / query</div>
     <div style="font-size:0.8rem; color:var(--text-muted); margin-top:10px;">${model.description}</div>
   `;
+}
+
+function togglePgSettings() {
+  document.getElementById('pg-sidebar').classList.toggle('active');
 }
 
 // ========== WALLET LOGIC ==========
@@ -432,4 +439,5 @@ function escapeHtml(text) {
 document.addEventListener('DOMContentLoaded', () => {
   renderModelCards();
   loadHomeStats();
+  updateModelInfo();
 });

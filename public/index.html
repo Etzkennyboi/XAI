@@ -94,7 +94,11 @@
   <section id="page-playground" class="section">
     <div class="pg-layout">
       
-      <div class="pg-sidebar">
+      <div class="pg-sidebar" id="pg-sidebar">
+        <div class="sidebar-header-mobile">
+          <h3>Model Settings</h3>
+          <button class="btn-close-mobile" onclick="togglePgSettings()">✕</button>
+        </div>
         
         <div class="sidebar-card">
           <label>Select AI Model</label>
@@ -110,16 +114,22 @@
           <textarea id="pg-system" placeholder="You are a helpful assistant..." style="height:100px; resize:none;">You are a premium AI agent on XAI Market.</textarea>
         </div>
 
-        <div class="sidebar-card">
+        <div class="sidebar-card hide-mobile">
           <label>Pricing Note</label>
           <div style="font-size:0.85rem; color:var(--text-secondary);">
             Every query sends a $0.01 USDC transaction directly to the marketplace receiving wallet on X Layer.
           </div>
         </div>
-
       </div>
 
       <div class="pg-main">
+        <div class="pg-header-mobile">
+          <button class="btn-settings-mobile" onclick="togglePgSettings()">
+            <span>⚙️</span> Settings
+          </button>
+          <div id="active-model-display" style="font-size:0.9rem; font-weight:700;">Loading...</div>
+        </div>
+
         <div id="pg-messages" class="chat-messages">
           <div class="msg-assistant">
             Hello! I am ready to process your query on X Layer. Please connect your wallet to start.
@@ -128,8 +138,8 @@
 
         <div class="chat-input-area">
           <input type="text" id="pg-prompt" class="chat-input" placeholder="Type your message here..." onkeydown="if(event.key === 'Enter') sendPlaygroundQuery()">
-          <button id="pg-send-btn" class="btn-main btn-primary" onclick="sendPlaygroundQuery()" style="padding: 10px 24px; font-size: 0.9rem;">
-            <span>⚡</span> <span id="btn-text">Pay & Send</span>
+          <button id="pg-send-btn" class="btn-main btn-primary" onclick="sendPlaygroundQuery()">
+            <span>⚡</span> <span id="btn-text" class="hide-mobile">Pay & Send</span>
           </button>
         </div>
       </div>
