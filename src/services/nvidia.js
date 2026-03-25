@@ -9,7 +9,7 @@ const MODELS = {
   'deepseek-v3.2': {
     name: 'DeepSeek V3.2',
     nvidiaModel: 'deepseek-ai/deepseek-v3.2',
-    apiKey: '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',
+    apiKey: process.env.NVIDIA_DEEPSEEK_KEY || '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',
     maxTokens: 8192,
     temperature: 1.0,
     topP: 0.95,
@@ -20,7 +20,7 @@ const MODELS = {
   'gpt-oss-120b': {
     name: 'GPT-OSS 120B',
     nvidiaModel: 'openai/gpt-oss-120b',
-    apiKey: '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',
+    apiKey: process.env.NVIDIA_GPT_OSS_KEY || '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',
     maxTokens: 4096,
     temperature: 1.0,
     topP: 1.0,
@@ -31,7 +31,7 @@ const MODELS = {
   'kimi-k2.5': {
     name: 'Kimi K2.5',
     nvidiaModel: 'moonshotai/kimi-k2.5',
-    apiKey: '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',
+    apiKey: process.env.NVIDIA_KIMI_KEY || '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',
     maxTokens: 16384,
     temperature: 1.0,
     topP: 1.0,
@@ -42,7 +42,7 @@ const MODELS = {
   'llama-3.3-70b': {
     name: 'Llama 3.3 70B',
     nvidiaModel: 'meta/llama-3.3-70b-instruct',
-    apiKey: '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',
+    apiKey: process.env.NVIDIA_LLAMA_KEY || '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',
     maxTokens: 1024,
     temperature: 0.2,
     topP: 0.7,
@@ -53,7 +53,7 @@ const MODELS = {
   'minimax-m2.5': {
     name: 'MiniMax M2.5',
     nvidiaModel: 'minimaxai/minimax-m2.5',
-    apiKey: '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',
+    apiKey: process.env.NVIDIA_MINIMAX_KEY || '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',
     maxTokens: 8192,
     temperature: 1.0,
     topP: 0.95,
@@ -64,7 +64,7 @@ const MODELS = {
   'qwen3-80b': {
     name: 'Qwen3 80B',
     nvidiaModel: 'qwen/qwen3-next-80b-a3b-instruct',
-    apiKey: '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',
+    apiKey: process.env.NVIDIA_QWEN_KEY || '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',
     maxTokens: 4096,
     temperature: 0.6,
     topP: 0.7,

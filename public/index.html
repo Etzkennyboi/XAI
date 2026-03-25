@@ -137,20 +137,74 @@
       <p style="color:var(--text-secondary); margin-bottom: 3rem;">XAI Market uses the <b>x402 Protocol</b> for payment routing. Your agent can query any model by sending a $0.01 USDC transaction on X Layer and including the TX hash in the headers.</p>
 
       <div class="sidebar-card" style="margin-bottom: 24px;">
+        <label>Overview of x402</label>
+        <p style="font-size:0.95rem; color:var(--text-primary); margin-bottom: 1rem;">
+          x402 is an HTTP extension where endpoints requiring payment return a <code>402 Payment Required</code> status code along with structured data defining the cost and payment network. Once your agent performs the on-chain payment, it simply retries the HTTP request, attaching proof of payment in the headers.
+        </p>
+      </div>
+
+      <div class="sidebar-card" style="margin-bottom: 24px;">
         <label>Base URL</label>
         <div style="font-family:'JetBrains Mono',monospace; color:var(--accent-blue);">http://localhost:3001/api</div>
       </div>
 
-      <div class="sidebar-card">
+      <div class="sidebar-card" style="margin-bottom: 24px;">
+        <label>Authentication & Headers</label>
+        <p style="font-size:0.95rem; color:var(--text-primary); margin-bottom: 1rem;">
+          To successfully authenticate an API request, you must include two custom headers:
+        </p>
+        <ul style="font-size:0.95rem; color:var(--text-primary); margin-left: 1.5rem; margin-bottom: 1rem;">
+          <li><code>x-payment</code>: The transaction hash of your USDC transfer on X Layer.</li>
+          <li><code>x-wallet-address</code>: The public address of the wallet that sent the transaction.</li>
+        </ul>
+      </div>
+
+      <div class="sidebar-card" style="margin-bottom: 24px;">
+        <label>Supported Models</label>
+        <p style="font-size:0.95rem; color:var(--text-primary); margin-bottom: 1rem;">
+          All models cost a flat fee of $0.01 USDC per inference. Pass the exact model string in your JSON payload:
+        </p>
+        <ul style="font-size:0.95rem; color:var(--text-primary); margin-left: 1.5rem; font-family:'JetBrains Mono',monospace; list-style-type: none;">
+          <li>deepseek-v3.2</li>
+          <li>gpt-oss-120b</li>
+          <li>kimi-k2.5</li>
+          <li>llama-3.3-70b</li>
+          <li>minimax-m2.5</li>
+          <li>qwen3-80b</li>
+        </ul>
+      </div>
+
+      <div class="sidebar-card" style="margin-bottom: 24px;">
         <label>Example Request (Curl)</label>
         <pre style="background:rgba(0,0,0,0.3); padding:20px; border-radius:12px; font-family:'JetBrains Mono',monospace; font-size:0.85rem; color:var(--text-primary); overflow-x:auto;">
 curl -X POST http://localhost:3001/api/chat \
--H "x-payment: <your-tx-hash>" \
--H "x-wallet-address: <your-address>" \
+-H "x-payment: &lt;your-tx-hash&gt;" \
+-H "x-wallet-address: &lt;your-address&gt;" \
+-H "Content-Type: application/json" \
 -d '{
-  "model": "deepseek-ai/deepseek-v3.2",
-  "messages": [{"role": "user", "content": "Hi!"}]
+  "model": "deepseek-v3.2",
+  "messages": [{"role": "user", "content": "Explain quantum mechanics in one sentence."}]
 }'</pre>
+      </div>
+
+      <div class="sidebar-card">
+        <label>Example Request (Python)</label>
+        <pre style="background:rgba(0,0,0,0.3); padding:20px; border-radius:12px; font-family:'JetBrains Mono',monospace; font-size:0.85rem; color:var(--text-primary); overflow-x:auto;">
+import requests
+
+url = "http://localhost:3001/api/chat"
+headers = {
+    "x-payment": "0xYourTransactionHash",
+    "x-wallet-address": "0xYourWalletAddress",
+    "Content-Type": "application/json"
+}
+data = {
+    "model": "deepseek-v3.2",
+    "messages": [{"role": "user", "content": "Explain quantum mechanics in one sentence."}]
+}
+
+response = requests.post(url, headers=headers, json=data)
+print(response.json())</pre>
       </div>
     </div>
   </section>
