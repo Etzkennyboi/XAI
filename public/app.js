@@ -326,7 +326,9 @@ async function sendPlaygroundQuery() {
     assistantMsg.className = 'chat-msg msg-assistant';
     
     if (result.choices?.[0]) {
-      assistantMsg.innerHTML = `<div style="white-space:pre-wrap;">${escapeHtml(result.choices[0].message?.content || '')}</div>`;
+      const markdownContent = result.choices[0].message?.content || '';
+      // Use marked to render the markdown nicely
+      assistantMsg.innerHTML = `<div class="markdown-body">${marked.parse(markdownContent)}</div>`;
     } else {
       assistantMsg.innerHTML = `<div style="color:#ef4444;">${result.error || 'Server error'}</div>`;
     }
